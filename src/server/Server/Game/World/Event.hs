@@ -7,7 +7,6 @@ module Server.Game.World.Event(
   , worldPlayerNetMessages'
   , worldPlayerSingleMessage
   -- | Logic events
-  , playerReqChunks
   ) where 
 
 import Core 
@@ -15,8 +14,7 @@ import Prelude as P hiding (id, (.))
 import FRP.Netwire 
 
 import Game.World 
-import Game.Player 
-import Game.Boxed.Model 
+import Game.Player
 
 import qualified Data.HashMap.Strict as M 
 import Network.Protocol.Message 
@@ -47,10 +45,3 @@ worldPlayerNetMessages' f = filterE (not.null) . mapE (filter f) . worldPlayerNe
 -- | Arrow that fires event when specific player sends one specific message in specific world
 worldPlayerSingleMessage :: (NetworkMessage -> Bool) -> GameWire (World, PlayerId) (Event NetworkMessage)
 worldPlayerSingleMessage f = mapE P.head . worldPlayerNetMessages' f
-
--- | Event fires when player in range of specific model requests chunks
-playerReqChunks :: BoxedModelId -> GameWire World (Event [PlayerId])
-playerReqChunks mid = mapE M.keys . worldNetMessages' isNeededMsg
-  where 
-    isNeededMsg (RequestBoxedModelData i) = i == unBoxedModelId mid 
-    isNeededMsg _ = False

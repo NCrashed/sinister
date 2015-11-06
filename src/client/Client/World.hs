@@ -8,32 +8,23 @@ module Client.World(
   , module W
   ) where
 
-import Core 
-
-import qualified Data.HashMap.Strict as M 
-
-import GHC.Generics (Generic)
-import Control.DeepSeq hiding (force)
-import Data.Typeable 
-
-import Prelude hiding (id, (.))
-import FRP.Netwire 
-
-import Game.World as W
 import Client.Player 
-import Network.Protocol.Message 
-import Game.Boxed.Model
-import Control.Wire.Collection
-import Client.Boxed.Model
-
+import Control.DeepSeq hiding (force)
+import Core 
 import Data.Text (Text)
+import Data.Typeable 
+import FRP.Netwire 
+import Game.World as W
+import GHC.Generics (Generic)
+import Network.Protocol.Message 
+import Prelude hiding (id, (.))
+import qualified Data.HashMap.Strict as M 
 import TextShow 
 
 -- | World extended with client specific data
 data ClientWorld = ClientWorld {
     clientWorld :: World 
   , clientWorldPlayer :: Maybe ClientPlayer
-  , clientWorldModels :: [ClientBoxedModel]
 } deriving (Generic)
 
 instance NFData ClientWorld
@@ -68,40 +59,18 @@ world wid name username = makeFixedIndexed wid $ const $ switch initalProcotol1
       gotRespond <- singleNetMessage isPlayerData -< ()
       logInfoE . mapE (\m -> "Got player data: " <> showt m) -< gotRespond
       eventWithPlayer <- mapE (playerFromMsg username) -< gotRespond
-      nextController <- mapE (\p -> switch $ initalProcotol2 p) -< eventWithPlayer
+      nextController <- mapE (\p -> mainController p startWorld) -< eventWithPlayer
 
-      first forceNF -< (ClientWorld startWorld Nothing [], nextController) 
-
-    -- | Second, get info about boxed models around
-    initalProcotol2 :: Player -> GameWire a (ClientWorld, Event (GameWire a ClientWorld))
-    initalProcotol2 startPlayer = proc _ -> do 
-      gotRespond <- singleNetMessage isBoxedModelsAround -< ()
-      logInfoE . mapE (\m -> "Got boxed models data: " <> showt m) -< gotRespond
-          -- Form list of models from message
-      let boxedModels = fmap ( \(BoxedModelsAround ids) 
-            -> fmap (emptyModel . BoxedModelId) ids) gotRespond
-          -- Form new world from list of models
-          w ms = startWorld { worldModels = M.fromList $ fmap modelId ms `zip` ms }
-          -- Create new controller from new world
-          nextController = fmap ( \ms -> mainController startPlayer $ w ms) boxedModels
-
-      first forceNF -< (ClientWorld startWorld Nothing [], nextController)
+      first forceNF -< (ClientWorld startWorld Nothing, nextController) 
 
     mainController :: Player -> World -> GameWire a ClientWorld
     mainController startPlayer initialWorld = loop $ proc (_, w_) -> do 
       w <- processMessages processMessage wid . delay initialWorld -< w_
       p <- runIndexed' (player startPlayer) -< w
 
-      modelAddEvent <- never -< () -- TODO: stub, nothing can add or remove
-      modelRemoveEvent <- never -< () -- models at the moment
-      cbs <- dynCollection initalModels -< ((w, clientPlayerCamera p), modelAddEvent, modelRemoveEvent)
-      let bs = clientBoxedModel <$> cbs 
-          w2 = w { worldModels = M.fromList $ fmap modelId bs `zip` bs }
-          cw = ClientWorld w2 (Just p) cbs
-      forceNF -< (cw, w2)
-      where 
-        initalModels = boxedModel <$> M.elems (worldModels initialWorld)
+      let cw = ClientWorld w (Just p)
+      forceNF -< (cw, w)
 
-    startWorld = World wid name M.empty M.empty M.empty 1000
+    startWorld = World wid name M.empty M.empty
 
     processMessage _ _ = error "Client.World.processMessage unimplemented"

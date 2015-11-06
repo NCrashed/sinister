@@ -4,9 +4,7 @@ module Game.Player(
   , PlayerId(..)
   , playerInfoMsg
   ) where 
-
-import Data.Vec as Vec
-
+  
 import GHC.Generics (Generic)
 import Control.DeepSeq
 import Data.Hashable
@@ -19,15 +17,10 @@ import Data.Text (Text)
 -- | Describing info attached to logged user
 -- Equality is cheked by id equality.
 data Player = Player {
-    -- | Player identifier 
+  -- | Player identifier 
     playerId :: !PlayerId
+  -- | Player displayed name
   , playerName :: !Text
-  -- | Player current position
-  , playerPos :: !(Vec3 Double)
-  -- | Player current facing
-  , playerFace :: !(Vec3 Double)
-  -- | Player current up vector
-  , playerUp :: !(Vec3 Double)
 } deriving (Generic, Show)
 
 instance NFData Player
@@ -39,7 +32,7 @@ instance Hashable PlayerId
 
 -- | Converts player into network message
 playerInfoMsg :: Player -> NetworkMessage
-playerInfoMsg (Player{..}) = PlayerData (unPlayerId playerId) playerPos playerFace playerUp
+playerInfoMsg (Player{..}) = PlayerData (unPlayerId playerId)
 
 -- | Equality by id
 instance Eq Player where 

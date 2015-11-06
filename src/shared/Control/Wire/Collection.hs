@@ -4,14 +4,15 @@ module Control.Wire.Collection(
   , dDynCollection
   ) where 
 
-import Core 
-import Prelude hiding (id, (.))
+import Control.Monad 
 import Control.Wire.Core
 import Control.Wire.Unsafe.Event
-import FRP.Netwire 
-import qualified Data.Foldable as F 
-import Control.Monad 
+import Core.Indexed
+import Core.Monad
 import Data.Either 
+import FRP.Netwire 
+import Prelude hiding (id, (.))
+import qualified Data.Foldable as F 
 
 -- | Helper that performs monadic action over value of event or returns default value
 -- Note: the function is isomorphic to @Data.Maybe.maybe@

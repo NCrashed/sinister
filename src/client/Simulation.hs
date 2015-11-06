@@ -6,38 +6,27 @@ module Simulation(
 import Prelude hiding (id, (.))
 import FRP.Netwire 
 
-import Graphics.Core
-import Graphics.Render.Common
-import Graphics.GPipe
---import Graphics.Light
-
+import Assets.Texture 
+import Client.Event.Camera
+import Client.Player
+import Client.World
 import Control.Concurrent.STM.TChan
 import Control.Concurrent.STM.TVar (TVar)
+import Control.DeepSeq
+import Control.Wire.Unsafe.Event (event)
 import Core
 import Data.IORef 
-import Network.Protocol.Message
-import GHC.Generics (Generic)
-import Control.DeepSeq
-
-import Client.World
-import Client.Player
-
-import Math.Vector 
-import qualified Data.Foldable as F 
---import Graphics.Render.Boxed.Model
-import Client.Event.Camera
-import Data.Vec as Vec 
-import Client.Boxed.Model
-import Game.Boxed.Block 
-import Assets.Texture 
-import Control.Wire.Unsafe.Event (event)
---import Game.Ship 
-
 import Data.Text (Text)
+import Data.Vec as Vec 
+import GHC.Generics (Generic)
+import Graphics.Core
+import Graphics.GPipe
+import Graphics.Render.Common
+import Graphics.Texture.Render
+import Math.Vector 
+import Network.Protocol.Message
+import qualified Data.Foldable as F 
 import TextShow 
-
-import Assets.ObjMesh
-import Graphics.Render.Model
 
 -- | Composable fragment streams that are bleated to screen
 type SceneFragmentStream = FragmentStream (Color RGBAFormat (Fragment Float), FragmentDepth)
@@ -83,9 +72,6 @@ mainWire :: Text -> GameMonad (GameWire () Scene)
 mainWire username = do
   logInfo "Starting client simulation..."
   Core.addNewFileSystemPack "media" "media"
-  Core.addNewFileSystemPack "ships" "media/ships"
-  Core.addNewFileSystemPack "tiles" "media/tiles"
-  Core.addNewFileSystemPack "npc" "media/npc"
   return $ proc _ -> do 
     -- DEBUG
     logInfoE . mapE (const $ "Player is connected") . playerConnected -< ()
@@ -111,10 +97,9 @@ mainWire username = do
       rSwitch (pure emptyScene) -< (a, preloadResources <$> worldRespond)
 
     preloadResources w = proc a -> do 
-      --rse <- loadTerrM1Ship -< () --loadDebugShip -< ()
       rse <- loadResource2 
-        "tiles:floor.obj" (ObjResourceName "FloorModel") 
-        "tiles:floor_02.png" (Par2DRGBA RGBA8) -< ()
+        "media:planet.png" (Par2DRGBA RGBA8) 
+        "media:ship.png" (Par2DRGBA RGBA8) -< ()
 
       rSwitch (pure emptyScene) -< (a, preloadResourcesSwitch w <$> rse)
 
@@ -124,13 +109,12 @@ mainWire username = do
         returnA -< emptyScene
       Right res -> renderDebug w res
 
-    renderDebug worldWire (ObjResource model, TextureResource tex) = loop $ proc (_, state_) -> do 
+    renderDebug worldWire (TextureResource planetTex, TextureResource _) = loop $ proc (_, state_) -> do 
       
       -- | Lock pointer for camera
       lockPointer . now -< True 
 
       w <- runIndexed' worldWire -< ()
-      let bs = clientWorldModels w 
 
       layerChange <- periodicList 1 (cycle [0 :: Int .. 4]) -< ()
       (oldP, layer) <- delay (zunit, 0) -< state_
@@ -141,14 +125,7 @@ mainWire username = do
         Nothing -> forceNF -< (w `deepseq` Scene mempty mempty, (oldP, newLayer))
         Just cam -> do 
           mpos <- mouseWorldPos -< cam
-          let addZ = case bs of
-                        [] -> 0 :: Double
-                        (cb:_) -> fromIntegral (clientBoxedLayer cb) * blockSize
-              lightPos = Vec.snoc mpos (addZ + 3.0)
-              --l1 = PointLight lightPos 4 (PowerLoss 0.5 0.1 0) 1
-              --testLights = lightDouble2Float <$> [l1]
-              --testCam = newCamera (CameraId 0) ((-5):0:.0:.()) (1:.0:.0:.()) (0:.0:.1:.())
-              scene = Scene (\s -> [modelFragmentStream cam model tex s]) mempty
-              --scene = Scene (mconcat ((\сb -> renderLayeredBoxedModel (clientBoxedRendered сb) (clientBoxedLayer сb) cam testLights 0) <$> bs)) mempty
-              --scene = Scene (const [fmap (,fragDepth) $ sliceTextureToLayers tex depthTex 5 !! newLayer]) mempty
+          let addZ = 3.0 :: Double
+              lightPos = Vec.snoc mpos addZ
+              scene = Scene (\_ -> [textureQuad False planetTex 0 1]) mempty
           forceNF -< (w `deepseq` scene, (lightPos, newLayer))

@@ -12,66 +12,15 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
-executable sinister-client
-  main-is:             Main.hs
-  other-modules:      Assets.ObjMesh.Converter
-                      Assets.ObjMesh.Parser
-                      Assets.Archive
-                      Assets.FileSystem
-                      Assets.Manager
-                      Assets.ObjMesh
-                      Assets.Resource
-                      Assets.ResourcePack
-                      Assets.Texture
-                      Client.Boxed.Model
-                      Client.Event.Camera
-                      Client.Camera
-                      Client.Camera2D
-                      Client.Player
-                      Client.Ship
-                      Client.World
-                      Core.Context
-                      Core.Event
-                      Core.Input
-                      Core.InputGLFW
-                      Core.Resource
-                      Core.State
-                      Graphics.Layered.DSL
-                      Graphics.Layered.DebugShip
-                      Graphics.Layered.Layer
-                      Graphics.Layered.Model
-                      Graphics.Layered.TerrM1Ship
-                      Graphics.Render.Boxed.Model
-                      Graphics.Render.Camera
-                      Graphics.Render.Common
-                      Graphics.Render.Layered
-                      Graphics.Render.Light
-                      Graphics.Render.Mesh
-                      Graphics.Render.Model
-                      Graphics.Render.PolyCube
-                      Graphics.Render.Quad
-                      Util.ByteString
-                      Util.Convert
-                      Util.Texture
-                      Client
-                      Core
-                      Main
-                      Simulation
-
+library
+  exposed-modules:
                       Control.Wire.Collection
-                      Core.Block
                       Core.CoreEvent
                       Core.Indexed
                       Core.Log
                       Core.Message
                       Core.Monad
-                      Game.Boxed.Block
-                      Game.Boxed.Chunk
-                      Game.Boxed.Direction
-                      Game.Boxed.Model
-                      Game.Ship.Mask
                       Game.Player
-                      Game.Ship
                       Game.World
                       Math.Quaternion
                       Math.Vector
@@ -80,42 +29,130 @@ executable sinister-client
                       Util.Function
                       Util.Monad
                       Util.Vec
-  -- other-extensions:    
+
   build-depends:        base >=4.7
-                      , Vec >= 1.0.1 && <2.0
-                      , GLFW-b >= 1.4.7.2
-                      , GPipe-Epsylon >= 2.0.0
-                      , transformers >=0.4.1
+                      , bytestring >= 0.10
+                      , cereal >= 0.4.1
+                      , cereal-text >= 0.1
+                      , cereal-vector >= 0.2
                       , containers >= 0.5
-                      , hashmap >=1.3.0 
-                      , hashable >=1.2
-                      , mtl >= 2.2
-                      , either >=4.3.1
-                      , directory >= 1.2
-                      , filepath >= 1.3
-                      , bytestring >=0.10
-                      , repa >= 3.4
+                      , deepseq >= 1.3
+                      , derive >= 2.5
+                      , either >= 4.4
+                      , hashable >= 1.2
+                      , mtl >= 2.1 
+                      , netwire >= 5.0.1
+                      , network >= 2.6.2
                       , network-transport >= 0.4.1
                       , network-transport-tcp >= 0.4.1
-                      , network >= 2.6.2
-                      , cereal >= 0.4.1
-                      , cereal-vector >= 0.2
-                      , cereal-text >= 0.1
-                      , utf8-string >= 0.3
-                      , vector >= 0.10
-                      , deepseq >= 1.3
-                      , netwire >= 5.0.1
-                      , unordered-containers >= 0.2.5
                       , stm >= 2.4
-                      , derive >= 2.5
-                      , parsec >=3.1
-                      , zlib >= 0.5.4
                       , text >= 1.2
                       , text-show >= 2
+                      , transformers >= 0.4.1
+                      , unordered-containers >= 0.2.5
+                      , utf8-string >= 0.3
+                      , Vec >= 1.0.1 && <2.0
+                      , vector >= 0.10
+                      , zlib >= 0.5.4
+
+  hs-source-dirs:      src/shared
+  default-language:    Haskell2010
+  default-extensions:  CPP, OverloadedStrings
+  
+  ghc-options: -O2 -Wall -Werror
+-- ghc-options: -O2 -prof -auto-all -osuf p_o -hisuf p_hi -rtsopts
+
+executable sinister-client
+  main-is:             Main.hs
+  other-modules:      
+                      Assets.Archive
+                      Assets.FileSystem
+                      Assets.Manager
+                      Assets.ObjMesh
+                      Assets.ObjMesh.Converter
+                      Assets.ObjMesh.Parser
+                      Assets.Resource
+                      Assets.ResourcePack
+                      Assets.Texture
+                      Client
+                      Client.Camera
+                      Client.Camera2D
+                      Client.Event.Camera
+                      Client.Player
+                      Client.Ship
+                      Client.World
+                      Core
+                      Core.Context
+                      Core.Event
+                      Core.Input
+                      Core.InputGLFW
+                      Core.Resource
+                      Core.State
+                      Graphics.Camera
+                      Graphics.Camera2D
+                      Graphics.Core
+                      Graphics.Layered.DebugShip
+                      Graphics.Layered.DSL
+                      Graphics.Layered.Layer
+                      Graphics.Layered.Model
+                      Graphics.Layered.TerrM1Ship
+                      Graphics.Light
+                      Graphics.Mesh
+                      Graphics.Model
+                      Graphics.Quad
+                      Graphics.Render.Camera
+                      Graphics.Render.Common
+                      Graphics.Render.Layered
+                      Graphics.Render.Light
+                      Graphics.Render.Mesh
+                      Graphics.Render.Model
+                      Graphics.Render.PolyCube
+                      Graphics.Render.Quad
+                      Graphics.Texture.Render
+                      Main
+                      Math.Vector
+                      Simulation
+                      Util.ByteString
+                      Util.Convert
+                      Util.Texture
+                      Util.Vec
+
+  build-depends:        base >=4.7
+                      , sinister
+                      , bytestring >=0.10
+                      , cereal >= 0.4.1
+                      , cereal-text >= 0.1
+                      , cereal-vector >= 0.2
+                      , containers >= 0.5
+                      , deepseq >= 1.3
+                      , derive >= 2.5
+                      , directory >= 1.2
+                      , either >=4.3.1
+                      , filepath >= 1.3
+                      , GLFW-b >= 1.4.7.2
+                      , GPipe-Epsylon >= 2.0.0
+                      , hashable >=1.2
+                      , hashmap >=1.3.0 
                       , JuicyPixels >= 3.2
                       , JuicyPixels-util >= 0.2
+                      , mtl >= 2.2
+                      , netwire >= 5.0.1
+                      , network >= 2.6.2
+                      , network-transport >= 0.4.1
+                      , network-transport-tcp >= 0.4.1
+                      , parsec >=3.1
+                      , repa >= 3.4
+                      , stm >= 2.4
+                      , text >= 1.2
+                      , text-show >= 2
+                      , transformers >=0.4.1
+                      , unordered-containers >= 0.2.5
+                      , utf8-string >= 0.3
+                      , Vec >= 1.0.1 && <2.0
+                      , vector >= 0.10
+                      , zlib >= 0.5.4
 
-  hs-source-dirs:      src/client, src/shared
+  hs-source-dirs:      src/client
   default-language:    Haskell2010
   default-extensions:  CPP, OverloadedStrings
   
@@ -127,7 +164,6 @@ executable sinister-server
   other-modules:      Core.Context
                       Core.Event
                       Core.State
-                      Server.Game.Boxed.Model
                       Server.Game.World.Event
                       Server.Game.Player
                       Server.Game.World
@@ -136,30 +172,8 @@ executable sinister-server
                       Core
                       Main
 
-                      Control.Wire.Collection
-                      Core.Block
-                      Core.CoreEvent
-                      Core.Indexed
-                      Core.Log
-                      Core.Message
-                      Core.Monad
-                      Game.Boxed.Block
-                      Game.Boxed.Chunk
-                      Game.Boxed.Direction
-                      Game.Boxed.Model
-                      Game.Ship.Mask
-                      Game.Player
-                      Game.Ship
-                      Game.World
-                      Math.Quaternion
-                      Math.Vector
-                      Network.Protocol.Message
-                      Util.Concurrent
-                      Util.Function
-                      Util.Monad
-                      Util.Vec
-  -- other-extensions:    
   build-depends:        base >=4.7
+                      , sinister
                       , Vec >= 1.0.1 && <2.0
                       , containers >= 0.5
                       , network-transport >= 0.4.1
@@ -182,7 +196,8 @@ executable sinister-server
                       , zlib >= 0.5.4
                       , text >= 1.2
                       , text-show >= 2
-  hs-source-dirs:      src/server, src/shared
+
+  hs-source-dirs:      src/server
   default-language:    Haskell2010
   default-extensions:  CPP, OverloadedStrings
 

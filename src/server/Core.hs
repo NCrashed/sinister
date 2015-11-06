@@ -11,7 +11,6 @@ import Core.State as X
 import Core.Log as X
 import Core.Indexed as X
 import Core.CoreEvent as X 
-import Core.Block as X 
 
 import Network.Transport
 import Control.Concurrent

@@ -19,10 +19,6 @@ module Core.Monad(
   , MessageManager(..)
   , getMsgMng
   , putMsgMng
-  -- | Block manager
-  , BlockManager(..)
-  , getBlockMng
-  , putBlockMng
   -- | Arrow utils
   , zipArrows
   , onceSwitch
@@ -41,7 +37,6 @@ import GHC.Generics (Generic)
 import Control.Monad.State.Strict
 import Control.DeepSeq
 import qualified Data.Sequence as S
-import Game.Boxed.Block 
 
 import Data.Text (Text)
 
@@ -116,8 +111,6 @@ data GameContextG cntx  = GameContextG {
   , gameCustomContext :: !cntx
   -- | Generic queue of log messages
   , gameLogMessages :: !(S.Seq Text)
-  -- | Generic block manager, where client and server holds known blocks
-  , gameBlockManager :: !BlockManager
 } deriving (Generic)
 
 -- | Forced when calculated next game state
@@ -130,7 +123,7 @@ class GameContextClass cntx where
 
 -- | Helper for creating new instance of generic context
 newGameContext :: GameContextClass cntx => GameContextG cntx
-newGameContext = GameContextG newMessageManager newCustomContext S.empty newBlockManager
+newGameContext = GameContextG newMessageManager newCustomContext S.empty
 
 -- | Retrievies message manager from game context
 getMsgMng :: GameMonadG cntx MessageManager 
@@ -165,28 +158,6 @@ instance NFData MessageManager
 -- | Creates empty message manager
 newMessageManager :: MessageManager 
 newMessageManager = MessageManager 1 HM.empty
-
--- | Holds all known blocks, in future mods will use the API to add it ownt blocks
-data BlockManager = BlockManager {
-  -- | Mapping from name to block, block name is unique
-  blockMngBlocks :: HashMap Text Block
-} deriving (Generic)
-
-instance NFData BlockManager 
-
--- | Makes empty block manager
-newBlockManager :: BlockManager 
-newBlockManager = BlockManager (HM.fromList $ fmap blockName standartBlocks `zip` standartBlocks)
-
--- | Low-level API for getting block manager
-getBlockMng :: GameMonadG cntx BlockManager 
-getBlockMng = fmap gameBlockManager get 
-
--- | Low-level API for saving block manager
-putBlockMng :: BlockManager -> GameMonadG cntx ()
-putBlockMng bmng = do 
-  cntx <- get 
-  put $ cntx { gameBlockManager = bmng }
 
 -- | Pass through first occurence and then forget about event producer
 -- Note: netwire once combinator still holds it event producer when event
